@@ -23,3 +23,7 @@ Hvordan kan jeg udvikle en webapp, hvor brugeren kan uploade en lydfil med enten
 
 
 ## Flowchart på brugerniveau
+![image](https://github.com/user-attachments/assets/7c592932-d252-4234-8dec-b85c9192e85d)
+
+## Disposition over koncepter der tages i brug
+Det ved jeg jo ik helt endnu... programmering er itterativt, så vi starter altså bare ud med p5.js p5.sound og drømme om et fungerende projekt...
