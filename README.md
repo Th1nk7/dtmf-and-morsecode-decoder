@@ -7,7 +7,7 @@ Jeg skal udvikle en webapp, der kan afkode morsekode og DTMF (Dual-Tone Multi-Fr
 
 Denne webapp kan være meget brugbar i flere sammenhæng. F.eks. vil den være god til CTF-konkurrencer, hvor der ofte er brug for netop disse funktioner.
 
-Projektet vil gøre brug af lydanalyse, og til dette bruger jeg p5-sound, og de værktøjer den indholder. Analysen skal finde mønstre i lyden og dermed bestemme frekvenser for DTMF, eller længden af tonen for morsekode.
+Projektet vil gøre brug af lydanalyse, og til dette vil jeg benytte python og de libraries, som er nødvendige. Analysen skal finde mønstre i lyden og dermed bestemme frekvenser for DTMF, eller længden af tonen for morsekode.
 
 
 ## Problemformulering
@@ -26,4 +26,4 @@ Hvordan kan jeg udvikle en webapp, hvor brugeren kan uploade en lydfil med enten
 ![image](https://github.com/user-attachments/assets/7c592932-d252-4234-8dec-b85c9192e85d)
 
 ## Disposition over koncepter der tages i brug
-Det ved jeg jo ik helt endnu... programmering er itterativt, så vi starter altså bare ud med p5.js p5.sound og drømme om et fungerende projekt...
+Det ved jeg jo ik helt endnu... programmering er itterativt, så vi starter altså bare ud med python og en drøm om et fungerende projekt...
