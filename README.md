@@ -23,7 +23,7 @@ Hvordan kan jeg udvikle en webapp, hvor brugeren kan uploade en lydfil med enten
 
 
 ## Flowchart på brugerniveau
-![image](https://github.com/user-attachments/assets/7c592932-d252-4234-8dec-b85c9192e85d)
+![image](https://github.com/user-attachments/assets/7534bd2f-8929-4e87-81aa-8222c2b7f1eb)
 
 ## Disposition over koncepter der tages i brug
 Det ved jeg jo ik helt endnu... programmering er itterativt, så vi starter altså bare ud med python og en drøm om et fungerende projekt...
