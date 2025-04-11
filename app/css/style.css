@@ -22,3 +22,19 @@ canvas {
   color:white;
   text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
 }
+
+form {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#output {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#timelineBar {
+  margin: 20px auto;
+  display: block;
+  border: 1px solid white;
+}

@@ -1,11 +1,9 @@
-from flask import Flask, request, abort, render_template_string, send_file
+from flask import Flask, request, abort, render_template_string
 import magic
 import tempfile
 import os
 from pydub import AudioSegment
 import numpy as np
-from PIL import Image, ImageDraw
-import io
 
 
 app = Flask(__name__)
@@ -78,18 +76,60 @@ def morse_to_text(morse):
     )
 
 MORSE_TO_CHARS_MAPPING = {
-    '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F',
-    '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L',
-    '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R',
-    '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X',
-    '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
-    '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
-    '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-    '· − − − − ·': '\'', '− · − · − −': '!', '− · · − ·': '/',
-    '− · − − ·': '(', '− · − − · −': ')', '· − · · ·': '&',
-    '− − − · · ·': ':', '− · − · − ·': ';', '− · · · −': '=',
-    '· − · − ·': '+', '− · · · · −': '-', '· · − − · −': '_',
-    '· − · · − ·': '"', '· · · − · · −': '$', '· − − · − ·': '@'
+    '.-': 'A',
+    '-...': 'B',
+    '-.-.': 'C',
+    '-..': 'D',
+    '.': 'E',
+    '..-.': 'F',
+    '--.': 'G',
+    '....': 'H',
+    '..': 'I',
+    '.---': 'J',
+    '-.-': 'K',
+    '.-..': 'L',
+    '--': 'M',
+    '-.': 'N',
+    '---': 'O',
+    '.--.': 'P',
+    '--.-': 'Q',
+    '.-.': 'R',
+    '...': 'S',
+    '-': 'T',
+    '..-': 'U',
+    '...-': 'V',
+    '.--': 'W',
+    '-..-': 'X',
+    '-.--': 'Y',
+    '--..': 'Z',
+    '.----': '1',
+    '..---': '2',
+    '...--': '3',
+    '....-': '4',
+    '.....': '5',
+    '-....': '6',
+    '--...': '7',
+    '---..': '8',
+    '----.': '9',
+    '-----': '0',
+    '.-.-.-': '.',
+    '--..--': ',',
+    '..--..': '?',
+    '· − − − − ·': '\'',
+    '− · − · − −': '!',
+    '− · · − ·': '/',
+    '− · − − ·': '(',
+    '− · − − · −': ')',
+    '· − · · ·': '&',
+    '− − − · · ·': ':',
+    '− · − · − ·': ';',
+    '− · · · −': '=',
+    '· − · − ·': '+',
+    '− · · · · −': '-',
+    '· · − − · −': '_',
+    '· − · · − ·': '"',
+    '· · · − · · −': '$',
+    '· − − · − ·': '@',
 }
 
 def decode_morse(filepath):
@@ -98,27 +138,8 @@ def decode_morse(filepath):
     segments = tone_map_to_segments(tone_map, step_ms)
     morse = segments_to_morse(segments)
     text = morse_to_text(morse)
-    return tone_map, text
-
-def generate_bar_frames(tone_map, window_ms, bar_width=300, height=20, fps=30, loop_duration=10):
-    total_windows = len(tone_map)
-    frames = []
-    frames_per_loop = fps * loop_duration
-
-    for frame_idx in range(frames_per_loop):
-        img = Image.new('RGB', (bar_width, height), color='white')
-        draw = ImageDraw.Draw(img)
-
-        progress = int((frame_idx / frames_per_loop) * bar_width)
-        for i in range(progress):
-            tone_index = (frame_idx - (progress - i)) % total_windows
-            color = (255, 0, 0) if tone_map[tone_index] else (255, 255, 255)
-            draw.line([(i, 0), (i, height)], fill=color)
-
-        draw.line([(progress, 0), (progress, height)], fill=(0, 0, 255))
-        frames.append(img)
-
-    return frames
+    os.remove(filepath)  # Clean up the temporary file
+    return text
 
 @app.route('/', methods=['GET'])
 def index():
@@ -151,12 +172,4 @@ def upload_file():
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp.name)
 
-    tone_map, decoded_text = decode_morse(tmp.name)
-    os.remove(tmp.name)
-
-    frames = generate_bar_frames(tone_map, window_ms=10)
-    gif_bytes = io.BytesIO()
-    frames[0].save(gif_bytes, format='GIF', save_all=True, append_images=frames[1:], loop=0, duration=33)
-    gif_bytes.seek(0)
-
-    return send_file(gif_bytes, mimetype='image/gif')
+    return decode_morse(tmp.name)
