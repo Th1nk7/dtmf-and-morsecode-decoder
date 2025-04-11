@@ -1,4 +1,5 @@
-from flask import Flask, request, abort, render_template_string, send_file
+from flask import Flask, request, abort, render_template, send_file, redirect, url_for
+import re
 import magic
 import tempfile
 import os
@@ -6,7 +7,10 @@ from pydub import AudioSegment
 import numpy as np
 from PIL import Image, ImageDraw
 import io
+import imageio
+import subprocess
 
+uploadNames = []
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limit: 5MB
@@ -24,7 +28,7 @@ def load_audio(filepath):
     audio = AudioSegment.from_file(filepath).set_channels(1)
     samples = np.array(audio.get_array_of_samples())
     sample_rate = audio.frame_rate
-    return samples, sample_rate
+    return samples, sample_rate, len(audio)  # return duration in ms
 
 def detect_tone_regions(samples, sample_rate, threshold=60, window_ms=10):
     window_size = int(sample_rate * (window_ms / 1000))
@@ -93,70 +97,77 @@ MORSE_TO_CHARS_MAPPING = {
 }
 
 def decode_morse(filepath):
-    samples, sr = load_audio(filepath)
+    samples, sr, duration_ms = load_audio(filepath)
     tone_map, step_ms = detect_tone_regions(samples, sr)
     segments = tone_map_to_segments(tone_map, step_ms)
     morse = segments_to_morse(segments)
     text = morse_to_text(morse)
-    return tone_map, text
+    return tone_map, text, duration_ms
 
-def generate_bar_frames(tone_map, window_ms, bar_width=300, height=20, fps=30, loop_duration=10):
-    total_windows = len(tone_map)
+def generate_bar_video(tone_map, window_ms, output_path, bar_width=512, height=96, fps=60):
     frames = []
-    frames_per_loop = fps * loop_duration
+    total_frames = int(len(tone_map) * (1000 / window_ms)) // (1000 // fps)
+    tone_cache = [255 for _ in range(bar_width)]
 
-    for frame_idx in range(frames_per_loop):
+    for frame_idx in range(total_frames):
         img = Image.new('RGB', (bar_width, height), color='white')
         draw = ImageDraw.Draw(img)
 
-        progress = int((frame_idx / frames_per_loop) * bar_width)
-        for i in range(progress):
-            tone_index = (frame_idx - (progress - i)) % total_windows
-            color = (255, 0, 0) if tone_map[tone_index] else (255, 255, 255)
-            draw.line([(i, 0), (i, height)], fill=color)
+        progress = frame_idx % bar_width
+        tone_index = int(frame_idx * (1000 / fps) / window_ms)
+        if tone_index < len(tone_map):
+            tone_cache[progress] = 255 if not tone_map[tone_index] else 0
+
+        for i in range(bar_width):
+            draw.line([(i, 0), (i, height)], fill=(255, tone_cache[i], tone_cache[i]))
 
         draw.line([(progress, 0), (progress, height)], fill=(0, 0, 255))
-        frames.append(img)
+        frames.append(np.array(img))
 
-    return frames
+    imageio.mimsave(output_path, frames, fps=fps)
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template_string("""
-    <!doctype html>
-    <title>Upload an audio file</title>
-    <h1>Upload a sound file (wav, mp3, ogg)</h1>
-    <form method=post enctype=multipart/form-data action="/upload">
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    """)
+    return render_template('index.html', err=None)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        abort(400, 'No file part')
+        abort(400, render_template('index.html', err='No file part'))
     file = request.files['file']
-
     if file.filename == '':
-        abort(400, 'No selected file')
+        abort(400, render_template('index.html', err='No selected file'))
     if not allowed_file(file.filename):
-        abort(400, 'Invalid file extension')
+        abort(400, render_template('index.html', err='Invalid file extension'))
 
     mime = magic.from_buffer(file.read(2048), mime=True)
     file.seek(0)
     if mime not in ALLOWED_MIME_TYPES:
-        abort(400, f'Invalid MIME type: {mime}')
+        abort(400, render_template('index.html', err=f'Invalid MIME type: {mime}'))
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
-    file.save(tmp.name)
+    tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
+    file.save(tmp_audio.name)
+    print(request.form)
+    if request.form.get('type') == 'morse':
+        tone_map, decoded_text, duration_ms = decode_morse(tmp_audio.name)
 
-    tone_map, decoded_text = decode_morse(tmp.name)
-    os.remove(tmp.name)
+        tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
+        tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
+        generate_bar_video(tone_map, window_ms=10, output_path=tmp_bar.name)
 
-    frames = generate_bar_frames(tone_map, window_ms=10)
-    gif_bytes = io.BytesIO()
-    frames[0].save(gif_bytes, format='GIF', save_all=True, append_images=frames[1:], loop=0, duration=33)
-    gif_bytes.seek(0)
+        # Combine audio and video with ffmpeg
+        subprocess.run([
+            "ffmpeg", "-y", "-loglevel", "quiet",
+            "-i", tmp_bar.name, "-i", tmp_audio.name,
+            "-c:v", "libx264", "-c:a", "aac", "-strict", "experimental",
+            "-shortest", tmp_video.name
+        ])
 
-    return send_file(gif_bytes, mimetype='image/gif')
+    os.remove(tmp_audio.name)
+    os.remove(tmp_bar.name)
+    if uploadNames:
+        os.remove(uploadNames.pop(0))
+    uploadNames.append(tmp_video.name)
+
+    return redirect(render_template('index.html', err=None, vidName=tmp_video.name))
+    #return send_file(tmp_video.name, mimetype='video/mp4')

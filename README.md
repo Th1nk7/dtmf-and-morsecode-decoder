@@ -27,3 +27,7 @@ Hvordan kan jeg udvikle en webapp, hvor brugeren kan uploade en lydfil med enten
 
 ## Disposition over koncepter der tages i brug
 Det ved jeg jo ik helt endnu... programmering er itterativt, så vi starter altså bare ud med python og en drøm om et fungerende projekt...
+
+
+CHANGE:
+support more than just wav

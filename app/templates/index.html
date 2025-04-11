@@ -1,35 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DTMF & Morse Decoder</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="scripts/libraries/p5.min.js"></script>
-    <script src="scripts/libraries/p5.sound.min.js"></script>
-    <script src="scripts/sketch.js"></script>
-  </head>
-  <body>
-    <div id="title">
-      <h1>DTMF & MORSE<br>DECODER</h1>
-    </div>
-    <form id="uploadForm">
-      <label for="decodeType">Select decoding type:</label>
-      <select id="decodeType" name="type">
-        <option value="morse">Morse</option>
-        <option value="dtmf">DTMF</option>
-      </select>
-      <br><br>
-      <label for="soundFile">Upload a sound file (max 5MB):</label>
-      <input type="file" id="soundFile" name="file" accept="audio/*" required>
-      <br><br>
-      <button type="submit">Upload and Decode</button>
-    </form>
-    <div id="output">
-      <h2>Decoded Output:</h2>
-      <p id="decodedText"></p>
-      <canvas id="timelineBar" style="display: none;"></canvas>
-    </div>
-    <script src="scripts/upload.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DTMF & MORSE DECODER</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body>
+  <div id="title">
+    <h1>DTMF & MORSE<br>DECODER</h1>
+  </div>
+
+  <div id="uploadField">
+    <embed id="videoPlayer" src="{{ (url_for('uploads', filename=vidName.strip('/')[1])) if vidName else ''}}"></embed>
+    <h2 id="fileNameField">{{ 'No file uploaded yet' if not err else err }}</h2>
+    <input type="file" id="soundUpload" onchange="" hidden>
+    <label for="soundUpload" class="button" id="uploadButton">Click here to upload sound</label>
+  </div>
+
+  <button id="dtmfButton" class="button" onclick="toggleButton('dtmf')">Click here to select DTMF</button>
+  <button class="button" id="startButton">Start decoder!</button>
+  <button id="morseButton" class="button" onclick="toggleButton('morse')">Click here to select morsecode</button>
+</body>
 </html>

@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Jersey+15&family=Press+Start+2P&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(rgb(40,40,40), black);
+  width: 100vw;
+  position: absolute;
+  display:grid;
+  grid-template:
+    "title title title" 1fr
+    "uploadField uploadField uploadField" 1fr
+    "dtmfButton startButton morseButton" 1fr / 1fr 1fr 1fr;
+}
+
+#title {
+  grid-area:title;
+  text-align: center;
+  font-family: 'Press Start 2P', display;
+  font-size: 30px;
+  line-height: 2.5em;
+  color: white;
+  text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
+}
+
+#uploadField {
+  grid-area: uploadField;
+  display: grid;
+  grid-template-rows: 0.5fr 1fr;
+  margin: 40px;
+  text-align: center;
+  color: white;
+}
+
+#fileNameField {
+  font-family: "Jersey 15", sans-serif;
+  font-weight: 400;
+  font-style: normal; 
+  font-size: 50px;
+  margin: 0;
+}
+
+.button {
+  font-family: "Jersey 15", sans-serif;
+  font-weight: 400;
+  font-style: normal; 
+  font-size: 50px;
+  border: white solid 2px;
+  border-radius: 24px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+}
+
+.button.active {
+  background-color: #00f;
+}
+
+.button:not(.active) {
+  background-color: #555;
+}
+
+.button.button:not(.active):hover {
+  background-color: #666;
+  text-shadow: -2px -2px 0 #00f, 2px -2px 0 #00f, -2px 2px 0 #00f, 2px 2px 0 #00f;
+}
+
+#dtmfButton {
+  grid-area: dtmfButton;
+  margin: 30px;
+  margin-top: 0;
+}
+
+#morseButton {
+  grid-area: morseButton;
+  margin: 30px;
+  margin-top: 0;
+}
+
+#startButton {
+  grid-area: startButton;
+  margin-bottom: 30px;
+}
+
+#uploadButton:hover {
+  background-color: #666;
+  text-shadow: -2px -2px 0 #00f, 2px -2px 0 #00f, -2px 2px 0 #00f, 2px 2px 0 #00f;
+}
