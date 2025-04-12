@@ -8,6 +8,9 @@
   <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 <body>
+  <div id="loadingDisplay" hidden>
+    <img src="{{ url_for('static', filename='loadingIcon.svg') }}" alt="Loading..." >
+  </div>
   <div id="title">
     <h1>DTMF & MORSE<br>DECODER</h1>
   </div>

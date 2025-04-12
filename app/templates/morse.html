@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Morse Bar Display</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='morse.js') }}" defer></script>
 </head>
 <body>
+  <div id="loadingDisplay">
+    <img src="{{ url_for('static', filename='loadingIcon.svg') }}">
+  </div>
   <video controls>
     <source id="morseBarDisplay" src="{{ video_path }}" type="video/mp4"></video>
 </body>

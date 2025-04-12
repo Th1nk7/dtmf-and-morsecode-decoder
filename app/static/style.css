@@ -91,3 +91,11 @@ html, body {
   background-color: #666;
   text-shadow: -2px -2px 0 #00f, 2px -2px 0 #00f, -2px 2px 0 #00f, 2px 2px 0 #00f;
 }
+
+#loadingDisplay {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(100, 100, 100, 0.5);
+  place-items: center;
+}

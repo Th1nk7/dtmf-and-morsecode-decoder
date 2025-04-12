@@ -1,4 +1,4 @@
-let activeMode = null; // Default mode
+var activeMode = null; // Default mode
 
 function toggleButton(selectedButton) {
   const dtmfButton = document.getElementById('dtmfButton');
@@ -18,9 +18,20 @@ function toggleButton(selectedButton) {
 document.getElementById('startButton').addEventListener('click', async (event) => {
   event.preventDefault();
 
+  if (!activeMode) {
+    alert('Please select a mode (DTMF or Morse) before starting.');
+    return;
+  }
+
+  else if (document.getElementById('soundUpload').files.length === 0) {
+    alert('Please select a sound file to upload.');
+    return;
+  }
+
+  document.getElementById('loadingDisplay').hidden = false;
+
   const formData = new FormData();
   const fileInput = document.getElementById('soundUpload');
-  const activeMode = document.querySelector('.button.active')?.id.replace('Button', '');
 
   formData.append('file', fileInput.files[0]);
   formData.append('type', activeMode);
@@ -36,7 +47,18 @@ document.getElementById('startButton').addEventListener('click', async (event) =
     const doc = parser.parseFromString(html, 'text/html');
     document.body.replaceWith(doc.body);
   } else {
-    const error = await response.text();
-    alert(error);
+    try {
+      const error = await response.json();
+      let lost = alert(error.error);
+      lost.ok = function() {
+      window.location.reload()
+      }
+    }
+    catch (e) {
+      let lost = alert("Internal Server Error. Please try again later.");
+      lost.ok = function() {
+        window.location.reload()
+      }
+    }
   }
 });
