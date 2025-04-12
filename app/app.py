@@ -10,8 +10,6 @@ import io
 import imageio
 import subprocess
 
-uploadNames = []
-
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limit: 5MB
 
@@ -165,9 +163,10 @@ def upload_file():
 
     os.remove(tmp_audio.name)
     os.remove(tmp_bar.name)
-    if uploadNames:
-        os.remove(uploadNames.pop(0))
-    uploadNames.append(tmp_video.name)
 
-    return redirect(render_template('index.html', err=None, vidName=tmp_video.name))
-    #return send_file(tmp_video.name, mimetype='video/mp4')
+    # Render the video path directly into the template
+    return render_template('morse.html', video_path=f"uploads/{os.path.basename(tmp_video.name)}")
+
+@app.route('/uploads/<path:filename>', methods=['GET'])
+def send_video(filename):
+    return send_file(f'./uploads/{filename}', as_attachment=False, mimetype='video/mp4')
