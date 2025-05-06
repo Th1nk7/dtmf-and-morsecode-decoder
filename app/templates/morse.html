@@ -11,7 +11,7 @@
   <div id="loadingDisplay">
     <img src="{{ url_for('static', filename='loadingIcon.svg') }}">
   </div>
-  <video controls>
-    <source id="morseBarDisplay" src="{{ video_path }}" type="video/mp4"></video>
+  <video id="morseBarDisplay" controls>
+    <source src="{{ video_path }}" type="video/mp4"></video>
 </body>
 </html>
