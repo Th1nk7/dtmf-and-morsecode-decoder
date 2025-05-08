@@ -9,20 +9,31 @@
 </head>
 <body>
   <div id="loadingDisplay" hidden>
-    <img src="{{ url_for('static', filename='loadingIcon.svg') }}" alt="Loading..." >
+    <img src="{{ url_for('static', filename='loadingIcon.svg') }}" alt="Loading...">
   </div>
+
   <div id="title">
     <h1>DTMF & MORSE<br>DECODER</h1>
   </div>
 
-  <div id="uploadField">
-    <h2 id="fileNameField">{{ 'No file uploaded yet' if not err else err }}</h2>
-    <input type="file" id="soundUpload" onchange="" hidden>
-    <label for="soundUpload" class="button" id="uploadButton">Click here to upload sound</label>
-  </div>
+  <form id="uploadForm" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+    <div id="uploadField">
+      <h2 id="fileNameField">
+        {% if err %}
+          {{ err }}
+        {% else %}
+          No file uploaded yet
+        {% endif %}
+      </h2>
 
-  <button id="dtmfButton" class="button" onclick="toggleButton('dtmf')">Click here to select DTMF</button>
-  <button class="button" id="startButton">Start decoder!</button>
-  <button id="morseButton" class="button" onclick="toggleButton('morse')">Click here to select morsecode</button>
+      <input type="file" name="file" id="soundUpload" hidden required>
+      <label for="soundUpload" class="button" id="uploadButton">Click here to upload sound</label>
+      <input type="hidden" name="type" id="uploadType" value="">
+    </div>
+
+    <button type="button" id="dtmfButton" class="button">Click here to select DTMF</button>
+    <button type="submit" class="button" id="startButton">Start decoder!</button>
+    <button type="button" id="morseButton" class="button">Click here to select morsecode</button>
+  </form>
 </body>
 </html>

@@ -11,7 +11,13 @@
   <div id="loadingDisplay">
     <img src="{{ url_for('static', filename='loadingIcon.svg') }}">
   </div>
-  <video id="morseBarDisplay" controls>
-    <source src="{{ video_path }}" type="video/mp4"></video>
+  <video id="morseBarDisplay" preload="auto" controls autoplay loop oncanplay="document.getElementById('loadingDisplay').hidden = true;">
+    <source src="{{ video_path }}" type="video/mp4">
+  </video>
+
+  <div id="controls">
+    <input type="range" id="vol-control" min="0" max="100" step="1" value="100">
+    <button id="pauseBtn">Pause</button>
+  </div>
 </body>
 </html>

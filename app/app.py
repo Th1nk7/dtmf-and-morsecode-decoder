@@ -1,172 +1,168 @@
-from flask import Flask, request, abort, render_template, send_file, redirect, url_for
+import os
 import re
+import shutil
+import uuid
 import magic
 import tempfile
-import os
-from pydub import AudioSegment
-import numpy as np
-from PIL import Image, ImageDraw
-import io
-import imageio
 import subprocess
+import numpy as np
+from flask import Flask, request, render_template, redirect, url_for, send_from_directory, abort
+from pydub import AudioSegment
+from PIL import Image, ImageDraw
+import imageio
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limit: 5MB
-
-ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/x-wav', 'audio/x-mpeg', 'audio/x-ogg'}
-ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
-
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB limit
 UPLOAD_DIR = "uploads"
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
+ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/x-wav', 'audio/x-mpeg', 'audio/x-ogg'}
+
+# Reset upload directory
+if os.path.exists(UPLOAD_DIR):
+    shutil.rmtree(UPLOAD_DIR)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def manage_upload_dir():
+    files = sorted([os.path.join(UPLOAD_DIR, f) for f in os.listdir(UPLOAD_DIR)], key=os.path.getctime)
+    while len(files) > 10:
+        os.remove(files.pop(0))
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def sanitize_filename(name):
+    return re.sub(r'[^a-zA-Z0-9_.-]', '_', name)
+
 def load_audio(filepath):
     audio = AudioSegment.from_file(filepath).set_channels(1)
     samples = np.array(audio.get_array_of_samples())
-    sample_rate = audio.frame_rate
-    return samples, sample_rate, len(audio)  # return duration in ms
+    return samples, audio.frame_rate, len(audio)  # ms
 
-def detect_tone_regions(samples, sample_rate, threshold=60, window_ms=10):
-    window_size = int(sample_rate * (window_ms / 1000))
-    tone_map = []
-
-    for i in range(0, len(samples), window_size):
-        window = samples[i:i+window_size]
-        amplitude = np.max(np.abs(window))
-        is_tone = amplitude > threshold
-        tone_map.append(is_tone)
-
+def detect_tone_regions(samples, sr, threshold=60, window_ms=10):
+    ws = int(sr * (window_ms / 1000))
+    tone_map = [np.max(np.abs(samples[i:i+ws])) > threshold for i in range(0, len(samples), ws)]
     return tone_map, window_ms
 
 def tone_map_to_segments(tone_map, window_ms):
     segments = []
     current = tone_map[0]
-    duration = window_ms
-
+    dur = window_ms
     for val in tone_map[1:]:
         if val == current:
-            duration += window_ms
+            dur += window_ms
         else:
-            segments.append((current, duration))
-            current = val
-            duration = window_ms
-
-    segments.append((current, duration))
-    return segments  
+            segments.append((current, dur))
+            current, dur = val, window_ms
+    segments.append((current, dur))
+    return segments
 
 def segments_to_morse(segments):
-    dot_len = 100  # ms, adjust for your setup
+    dot_len = 100
     morse = ""
-    for is_tone, duration in segments:
-        if is_tone:
-            if duration < dot_len * 1.5:
-                morse += "."
-            else:
-                morse += "-"
+    for tone, dur in segments:
+        if tone:
+            morse += '.' if dur < dot_len * 1.5 else '-'
         else:
-            if duration < dot_len * 1.5:
-                morse += ""  # intra-char gap
-            elif duration < dot_len * 3.5:
-                morse += " "  # char gap
-            else:
-                morse += " / "  # word gap
+            morse += '' if dur < dot_len * 1.5 else (' ' if dur < dot_len * 3.5 else ' / ')
     return morse
 
-def morse_to_text(morse):
-    return ''.join(
-        MORSE_TO_CHARS_MAPPING.get(char, ' ') for char in morse.split()
-    )
-
-MORSE_TO_CHARS_MAPPING = {
+MORSE_TO_CHARS = {
     '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F',
     '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L',
     '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R',
     '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X',
     '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
     '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
-    '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-    '· − − − − ·': '\'', '− · − · − −': '!', '− · · − ·': '/',
-    '− · − − ·': '(', '− · − − · −': ')', '· − · · ·': '&',
-    '− − − · · ·': ':', '− · − · − ·': ';', '− · · · −': '=',
-    '· − · − ·': '+', '− · · · · −': '-', '· · − − · −': '_',
-    '· − · · − ·': '"', '· · · − · · −': '$', '· − − · − ·': '@'
+    '----.': '9', '-----': '0'
 }
 
-def decode_morse(filepath):
-    samples, sr, duration_ms = load_audio(filepath)
-    tone_map, step_ms = detect_tone_regions(samples, sr)
-    segments = tone_map_to_segments(tone_map, step_ms)
-    morse = segments_to_morse(segments)
-    text = morse_to_text(morse)
-    return tone_map, text, duration_ms
+def morse_to_text(morse):
+    return ''.join(MORSE_TO_CHARS.get(c, ' ') for c in morse.split())
 
-def generate_bar_video(tone_map, window_ms, output_path, bar_width=512, height=96, fps=60):
+def decode_morse(path):
+    samples, sr, dur = load_audio(path)
+    if dur > 30000:
+        raise ValueError("Audio too long (max 30 seconds)")
+    tone_map, step = detect_tone_regions(samples, sr)
+    segments = tone_map_to_segments(tone_map, step)
+    return tone_map, morse_to_text(segments_to_morse(segments)), dur
+
+def generate_bar_video(tone_map, window_ms, out, width=512, height=96, fps=60):
     frames = []
-    total_frames = int(len(tone_map) * (1000 / window_ms)) // (1000 // fps)
-    tone_cache = [255 for _ in range(bar_width)]
-
-    for frame_idx in range(total_frames):
-        img = Image.new('RGB', (bar_width, height), color='white')
+    tone_cache = [255] * width
+    total_frames = len(tone_map)
+    for i in range(total_frames):
+        img = Image.new('RGB', (width, height), 'white')
         draw = ImageDraw.Draw(img)
-
-        progress = frame_idx % bar_width
-        tone_index = int(frame_idx * (1000 / fps) / window_ms)
-        if tone_index < len(tone_map):
-            tone_cache[progress] = 255 if not tone_map[tone_index] else 0
-
-        for i in range(bar_width):
-            draw.line([(i, 0), (i, height)], fill=(255, tone_cache[i], tone_cache[i]))
-
+        progress = i % width
+        tone_cache[progress] = 0 if tone_map[i] else 255
+        for x in range(width):
+            draw.line([(x, 0), (x, height)], fill=(255, tone_cache[x], tone_cache[x]))
         draw.line([(progress, 0), (progress, height)], fill=(0, 0, 255))
         frames.append(np.array(img))
+    imageio.mimsave(out, frames, fps=fps)
 
-    imageio.mimsave(output_path, frames, fps=fps)
-
-@app.route('/', methods=['GET'])
+@app.route('/')
 def index():
-    return render_template('index.html', err=None)
+    err = request.args.get('err')
+    return render_template('index.html', err=err)
 
 @app.route('/upload', methods=['POST'])
-def upload_file():
+def upload():
     if 'file' not in request.files:
-        abort(400, render_template('index.html', err='No file part'))
+        return redirect(url_for('index', err='No file provided'))
+
     file = request.files['file']
-    if file.filename == '':
-        abort(400, render_template('index.html', err='No selected file'))
-    if not allowed_file(file.filename):
-        abort(400, render_template('index.html', err='Invalid file extension'))
+    if not file or not allowed_file(file.filename):
+        return redirect(url_for('index', err='Invalid file type'))
 
     mime = magic.from_buffer(file.read(2048), mime=True)
     file.seek(0)
     if mime not in ALLOWED_MIME_TYPES:
-        abort(400, render_template('index.html', err=f'Invalid MIME type: {mime}'))
+        return redirect(url_for('index', err='Bad MIME: ' + mime))
 
-    tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
-    file.save(tmp_audio.name)
-    print(request.form)
-    if request.form.get('type') == 'morse':
-        tone_map, decoded_text, duration_ms = decode_morse(tmp_audio.name)
+    unique_id = uuid.uuid4().hex[:16]
+    tmp_path = os.path.join(UPLOAD_DIR, f"{unique_id}.wav")
+    file.save(tmp_path)
 
-        tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
-        tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
-        generate_bar_video(tone_map, window_ms=10, output_path=tmp_bar.name)
+    try:
+        tone_map, decoded, dur = decode_morse(tmp_path)
+        bar_path = os.path.join(UPLOAD_DIR, f"{unique_id}_bar.mp4")
+        final_path = os.path.join(UPLOAD_DIR, f"{unique_id}.mp4")
+        generate_bar_video(tone_map, 10, bar_path)
 
-        # Combine audio and video with ffmpeg
         subprocess.run([
             "ffmpeg", "-y", "-loglevel", "quiet",
-            "-i", tmp_bar.name, "-i", tmp_audio.name,
-            "-c:v", "libx264", "-c:a", "aac", "-strict", "experimental",
-            "-shortest", tmp_video.name
+            "-i", bar_path, "-i", tmp_path,
+            "-c:v", "libx264", "-c:a", "aac",
+            "-strict", "experimental", "-shortest", final_path
         ])
 
-    os.remove(tmp_audio.name)
-    os.remove(tmp_bar.name)
+        os.remove(tmp_path)
+        os.remove(bar_path)
+        manage_upload_dir()
+        return redirect(url_for('morse', id=unique_id))
 
-    # Render the video path directly into the template
-    return render_template('morse.html', video_path=f"uploads/{os.path.basename(tmp_video.name)}")
+    except Exception as e:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        return redirect(url_for('index', err=str(e)))
 
-@app.route('/uploads/<path:filename>', methods=['GET'])
-def send_video(filename):
-    return send_file(f'./uploads/{filename}', as_attachment=False, mimetype='video/mp4')
+@app.route('/morse')
+def morse():
+    video_id = request.args.get('id')
+    if not video_id:
+        return redirect(url_for('index', err='Missing ID'))
+
+    video_path = os.path.join(UPLOAD_DIR, f"{video_id}.mp4")
+    if not os.path.isfile(video_path):
+        return redirect(url_for('index', err='Invalid or expired ID'))
+
+    return render_template('morse.html', video_path=f"uploads/{video_id}.mp4")
+
+@app.route('/uploads/<filename>')
+def serve_upload(filename):
+    safe_path = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.isfile(safe_path):
+        abort(404, description="File not found")
+    return send_from_directory(UPLOAD_DIR, filename, mimetype='video/mp4', as_attachment=False)

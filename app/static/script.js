@@ -1,64 +1,24 @@
-var activeMode = null; // Default mode
+document.addEventListener("DOMContentLoaded", () => {
+  const dtmfBtn = document.getElementById('dtmfButton');
+  const morseBtn = document.getElementById('morseButton');
+  const typeInput = document.getElementById('uploadType');
+  const soundUpload = document.getElementById('soundUpload');
+  const fileNameField = document.getElementById('fileNameField');
 
-function toggleButton(selectedButton) {
-  const dtmfButton = document.getElementById('dtmfButton');
-  const morseButton = document.getElementById('morseButton');
-
-  if (selectedButton === 'dtmf') {
-    dtmfButton.classList.add('active');
-    morseButton.classList.remove('active');
-    activeMode = 'dtmf';
-  } else {
-    morseButton.classList.add('active');
-    dtmfButton.classList.remove('active');
-    activeMode = 'morse';
-  }
-}
-
-document.getElementById('startButton').addEventListener('click', async (event) => {
-  event.preventDefault();
-
-  if (!activeMode) {
-    alert('Please select a mode (DTMF or Morse) before starting.');
-    return;
+  function toggleButton(type) {
+    typeInput.value = type;
+    dtmfBtn.classList.remove('active');
+    morseBtn.classList.remove('active');
+    if (type === 'dtmf') dtmfBtn.classList.add('active');
+    if (type === 'morse') morseBtn.classList.add('active');
   }
 
-  else if (document.getElementById('soundUpload').files.length === 0) {
-    alert('Please select a sound file to upload.');
-    return;
-  }
+  dtmfBtn.addEventListener('click', () => toggleButton('dtmf'));
+  morseBtn.addEventListener('click', () => toggleButton('morse'));
 
-  document.getElementById('loadingDisplay').hidden = false;
-
-  const formData = new FormData();
-  const fileInput = document.getElementById('soundUpload');
-
-  formData.append('file', fileInput.files[0]);
-  formData.append('type', activeMode);
-
-  const response = await fetch('/upload', {
-    method: 'POST',
-    body: formData,
+  soundUpload.addEventListener('change', () => {
+    fileNameField.textContent = soundUpload.files[0]
+      ? soundUpload.files[0].name
+      : 'No file uploaded yet';
   });
-
-  if (response.ok) {
-    const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    document.body.replaceWith(doc.body);
-  } else {
-    try {
-      const error = await response.json();
-      let lost = alert(error.error);
-      lost.ok = function() {
-      window.location.reload()
-      }
-    }
-    catch (e) {
-      let lost = alert("Internal Server Error. Please try again later.");
-      lost.ok = function() {
-        window.location.reload()
-      }
-    }
-  }
 });
