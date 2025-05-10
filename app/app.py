@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for
+from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for, jsonify
 import re
 import magic
 import tempfile
@@ -168,7 +168,7 @@ def upload_file():
     os.remove(tmp_audio.name)
     os.remove(tmp_bar.name)
 
-    return redirect(url_for('morse', v_id=os.path.basename(tmp_video.name).split('.')[0]))
+    return jsonify({'redirect': url_for('morse', v_id=os.path.basename(tmp_video.name).split('.')[0])})
 
 @app.route('/morse', methods=['GET'])
 def morse():

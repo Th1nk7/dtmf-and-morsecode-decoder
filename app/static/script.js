@@ -53,29 +53,14 @@ document.getElementById('startButton').addEventListener('click', async (event) =
   formData.append('file', fileInput.files[0]);
   formData.append('type', activeMode);
 
-  const response = await fetch('/upload', {
+  fetch('/upload', {
     method: 'POST',
-    body: formData,
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.redirect) {
+      window.location.href = data.redirect;
+    }
   });
-
-  if (response.ok) {
-    const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    document.body.replaceWith(doc.body);
-  } else {
-    try {
-      const error = await response.json();
-      let lost = alert(error.error);
-      lost.ok = function() {
-      window.location.reload()
-      }
-    }
-    catch (e) {
-      let lost = alert("Internal Server Error. Please try again later.");
-      lost.ok = function() {
-        window.location.reload()
-      }
-    }
-  }
 });
