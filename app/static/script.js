@@ -1,5 +1,12 @@
 var activeMode = null; // Default mode
 
+function updateFileName() {
+  const fileInput = document.getElementById('soundUpload');
+  const fileNameDisplay = document.getElementById('fileNameField');
+  const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'No file chosen';
+  fileNameDisplay.textContent = fileName;
+}
+
 function toggleButton(selectedButton) {
   const dtmfButton = document.getElementById('dtmfButton');
   const morseButton = document.getElementById('morseButton');
@@ -28,10 +35,11 @@ document.getElementById('startButton').addEventListener('click', async (event) =
     return;
   }
 
-  document.getElementById('loadingDisplay').hidden = false;
+  document.getElementById('loadingDisplay').style.display = 'flex';
 
   const formData = new FormData();
   const fileInput = document.getElementById('soundUpload');
+
 
   formData.append('file', fileInput.files[0]);
   formData.append('type', activeMode);

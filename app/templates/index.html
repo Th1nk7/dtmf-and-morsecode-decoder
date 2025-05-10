@@ -16,8 +16,8 @@
   </div>
 
   <div id="uploadField">
-    <h2 id="fileNameField">{{ 'No file uploaded yet' if not err else err }}</h2>
-    <input type="file" id="soundUpload" onchange="" hidden>
+    <h2 id="fileNameField">No file uploaded yet</h2>
+    <input type="file" id="soundUpload" onchange="updateFileName()" hidden>
     <label for="soundUpload" class="button" id="uploadButton">Click here to upload sound</label>
   </div>
 
