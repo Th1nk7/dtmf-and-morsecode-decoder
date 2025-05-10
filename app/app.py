@@ -6,10 +6,10 @@ import os
 from pydub import AudioSegment
 import numpy as np
 from PIL import Image, ImageDraw
-import io
 import imageio
 import subprocess
 import uuid
+import shutil
 
 app = Flask(__name__)
 app.secret_key = str(uuid.uuid4())  # Replace with a strong, unique key
@@ -19,7 +19,23 @@ ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/x-wav', 'au
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
 
 UPLOAD_DIR = "uploads"
+shutil.rmtree(UPLOAD_DIR, ignore_errors=True)  # Clean up old uploads
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+MORSE_TO_CHARS_MAPPING = {
+    '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F',
+    '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L',
+    '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R',
+    '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X',
+    '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
+    '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
+    '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
+    '· − − − − ·': '\'', '− · − · − −': '!', '− · · − ·': '/',
+    '− · − − ·': '(', '− · − − · −': ')', '· − · · ·': '&',
+    '− − − · · ·': ':', '− · − · − ·': ';', '− · · · −': '=',
+    '· − · − ·': '+', '− · · · · −': '-', '· · − − · −': '_',
+    '· − · · − ·': '"', '· · · − · · −': '$', '· − − · − ·': '@'
+}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -81,21 +97,6 @@ def morse_to_text(morse):
         MORSE_TO_CHARS_MAPPING.get(char, ' ') for char in morse.split()
     )
 
-MORSE_TO_CHARS_MAPPING = {
-    '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F',
-    '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L',
-    '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R',
-    '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X',
-    '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
-    '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
-    '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-    '· − − − − ·': '\'', '− · − · − −': '!', '− · · − ·': '/',
-    '− · − − ·': '(', '− · − − · −': ')', '· − · · ·': '&',
-    '− − − · · ·': ':', '− · − · − ·': ';', '− · · · −': '=',
-    '· − · − ·': '+', '− · · · · −': '-', '· · − − · −': '_',
-    '· − · · − ·': '"', '· · · − · · −': '$', '· − − · − ·': '@'
-}
-
 def decode_morse(filepath):
     samples, sr, duration_ms = load_audio(filepath)
     tone_map, step_ms = detect_tone_regions(samples, sr)
@@ -126,6 +127,13 @@ def generate_bar_video(tone_map, window_ms, output_path, bar_width=512, height=9
 
     imageio.mimsave(output_path, frames, fps=fps)
 
+def removeOldFiles():
+    # Check and delete the oldest file if there are more than 10 files
+    files = [os.path.join(UPLOAD_DIR, f) for f in os.listdir(UPLOAD_DIR)]
+    if len(files) > 10:
+        oldest_file = min(files, key=os.path.getctime)
+        os.remove(oldest_file)
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -147,6 +155,7 @@ def upload_file():
     if mime not in ALLOWED_MIME_TYPES:
         return redirect(url_for('index', err='Invalid file type'))
 
+
     tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp_audio.name)
     print(request.form)
@@ -167,6 +176,7 @@ def upload_file():
 
     os.remove(tmp_audio.name)
     os.remove(tmp_bar.name)
+    removeOldFiles()
 
     return jsonify({'redirect': url_for('morse', v_id=os.path.basename(tmp_video.name).split('.')[0])})
 

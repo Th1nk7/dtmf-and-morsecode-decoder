@@ -1,6 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Jersey+15&family=Press+Start+2P&display=swap');
 
-html, body {
+#indexHTML, #indexBody {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(rgb(40,40,40), black);
+  width: 100vw;
+  position: absolute;
+  display:grid;
+  grid-template:
+    "title title title" 1fr
+    "uploadField uploadField uploadField" 1fr
+    "dtmfButton startButton morseButton" 1fr / 1fr 1fr 1fr;
+}
+
+#morseHTML, #morseBody {
   margin: 0;
   padding: 0;
   height: 100vh;

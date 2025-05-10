@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="morseHTML">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Morse Bar Display</title>
+  <title>MORSE DECODER</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='morse.js') }}" defer></script>
 </head>
-<body>
+<body id="morseBody">
   <div id="loadingDisplay">
-    <img src="{{ url_for('static', filename='loadingIcon.svg') }}">
+    <img src="{{ url_for('static', filename='loadingIcon.svg') }}" display="flex">
   </div>
-  <video id="morseBarDisplay" controls>
-    <source src="{{ video_path }}" type="video/mp4"></video>
+
+  <div id="title">
+    <h1>MORSE DECODER</h1>
+  </div>
+
+  <video id="morseBarDisplay" loop oncanplaythrough="this.play(); document.getElementById('loadingDisplay').style.display='none';">
+    <source src="{{ video_path }}" type="video/mp4">
+  </video>
 </body>
 </html>
