@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, render_template, send_file, redirect, url_for
+from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for
 import re
 import magic
 import tempfile
@@ -169,4 +169,4 @@ def upload_file():
 
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def send_video(filename):
-    return send_file(f'./uploads/{filename}', as_attachment=False, mimetype='video/mp4')
+    return send_from_directory(UPLOAD_DIR, filename, as_attachment=False, mimetype='video/mp4')
