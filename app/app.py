@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for
+from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for, flash
 import re
 import magic
 import tempfile
@@ -11,7 +11,7 @@ import imageio
 import subprocess
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # Limit: 5MB
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024  # Limit: 3MB
 
 ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/x-wav', 'audio/x-mpeg', 'audio/x-ogg'}
 ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}
@@ -131,17 +131,21 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        abort(400, render_template('index.html', err='No file part'))
+        flash('No file part')
+        abort(400, redirect(url_for('index.html')))
     file = request.files['file']
     if file.filename == '':
-        abort(400, render_template('index.html', err='No selected file'))
+        flash('No selected file')
+        abort(400, redirect(url_for('index.html')))
     if not allowed_file(file.filename):
-        abort(400, render_template('index.html', err='Invalid file extension'))
+        flash('File type not allowed')
+        abort(400, redirect(url_for('index.html')))
 
     mime = magic.from_buffer(file.read(2048), mime=True)
     file.seek(0)
     if mime not in ALLOWED_MIME_TYPES:
-        abort(400, render_template('index.html', err=f'Invalid MIME type: {mime}'))
+        flash('Invalid file type')
+        abort(400, redirect(url_for('index.html')))
 
     tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp_audio.name)
