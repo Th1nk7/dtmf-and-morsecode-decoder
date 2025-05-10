@@ -1,5 +1,14 @@
 var activeMode = null; // Default mode
 
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const err = urlParams.get('err');
+  if (err) {
+    alert(err);
+    window.location.href = '/';
+  }
+});
+
 function updateFileName() {
   const fileInput = document.getElementById('soundUpload');
   const fileNameDisplay = document.getElementById('fileNameField');

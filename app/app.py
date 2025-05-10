@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for, flash
+from flask import Flask, request, abort, render_template, send_from_directory, redirect, url_for
 import re
 import magic
 import tempfile
@@ -9,8 +9,10 @@ from PIL import Image, ImageDraw
 import io
 import imageio
 import subprocess
+import uuid
 
 app = Flask(__name__)
+app.secret_key = str(uuid.uuid4())  # Replace with a strong, unique key
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024  # Limit: 3MB
 
 ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg', 'audio/x-wav', 'audio/x-mpeg', 'audio/x-ogg'}
@@ -126,30 +128,29 @@ def generate_bar_video(tone_map, window_ms, output_path, bar_width=512, height=9
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html', err=None)
+    return render_template('index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
-        flash('No file part')
-        abort(400, redirect(url_for('index.html')))
+        return redirect(url_for('index', err='No file part'))
+
     file = request.files['file']
     if file.filename == '':
-        flash('No selected file')
-        abort(400, redirect(url_for('index.html')))
+        return redirect(url_for('index', err='No selected file'))
+
     if not allowed_file(file.filename):
-        flash('File type not allowed')
-        abort(400, redirect(url_for('index.html')))
+        return redirect(url_for('index', err='File type not allowed'))
 
     mime = magic.from_buffer(file.read(2048), mime=True)
     file.seek(0)
     if mime not in ALLOWED_MIME_TYPES:
-        flash('Invalid file type')
-        abort(400, redirect(url_for('index.html')))
+        return redirect(url_for('index', err='Invalid file type'))
 
     tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp_audio.name)
     print(request.form)
+
     if request.form.get('type') == 'morse':
         tone_map, decoded_text, duration_ms = decode_morse(tmp_audio.name)
 
@@ -157,7 +158,6 @@ def upload_file():
         tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
         generate_bar_video(tone_map, window_ms=10, output_path=tmp_bar.name)
 
-        # Combine audio and video with ffmpeg
         subprocess.run([
             "ffmpeg", "-y", "-loglevel", "quiet",
             "-i", tmp_bar.name, "-i", tmp_audio.name,
@@ -168,8 +168,19 @@ def upload_file():
     os.remove(tmp_audio.name)
     os.remove(tmp_bar.name)
 
-    # Render the video path directly into the template
-    return render_template('morse.html', video_path=f"uploads/{os.path.basename(tmp_video.name)}")
+    return redirect(url_for('morse', v_id=os.path.basename(tmp_video.name).split('.')[0]))
+
+@app.route('/morse', methods=['GET'])
+def morse():
+    video_id = request.args.get('v_id')
+    if not video_id:
+        return redirect(url_for('index', err='Missing video ID'))
+
+    video_path = os.path.join(UPLOAD_DIR, f"{video_id}.mp4")
+    if not os.path.exists(video_path):
+        return redirect(url_for('index', err='Video not found'))
+
+    return render_template('morse.html', video_path=f"uploads/{video_id}.mp4")
 
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def send_video(filename):
