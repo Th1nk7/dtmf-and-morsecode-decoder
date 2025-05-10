@@ -195,3 +195,7 @@ def morse():
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def send_video(filename):
     return send_from_directory(UPLOAD_DIR, filename, as_attachment=False, mimetype='video/mp4')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
