@@ -163,6 +163,18 @@ def upload_file():
     if request.form.get('type') == 'morse':
         tone_map, decoded_text, duration_ms = decode_morse(tmp_audio.name)
 
+        # Generate timestamps for each decoded character
+        timestamps = []
+        current_time = 0
+        char_index = 0
+        for is_tone, duration in tone_map_to_segments(tone_map, 10):
+            current_time += duration
+            if is_tone and char_index < len(decoded_text):
+                timestamps.append((current_time, decoded_text[char_index]))
+                char_index += 1
+
+        print("Timestamps:", timestamps)
+
         tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
         tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
         generate_bar_video(tone_map, window_ms=10, output_path=tmp_bar.name)
