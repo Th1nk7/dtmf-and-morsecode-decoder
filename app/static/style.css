@@ -34,7 +34,7 @@
   text-align: center;
   font-family: 'Press Start 2P', display;
   font-size: 30px;
-  line-height: 5em;
+  line-height: 3em;
   color: white;
   text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
   cursor: default;
@@ -118,16 +118,16 @@
   justify-content: center;
 }
 
-.button.round {
+.round {
   display: block;
   width: 75px;
   height: 75px;
   border-radius: 50%;
-  font-size:50px;
+  font-size: 50px !important;
   line-height: 1.5;
 }
 
-.button.round:hover {
+.round:hover {
   border-color: #00f;
 }
 
