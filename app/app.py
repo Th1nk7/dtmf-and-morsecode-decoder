@@ -32,11 +32,11 @@ MORSE_TO_CHARS_MAPPING = {
     '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
     '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
     '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-    '·−−−−·': '\'', '−·−·−−': '!', '−··−·': '/',
-    '−·−−·': '(', '−·−−·−': ')', '·−···': '&',
-    '−−−···': ':', '−·−·−·': ';', '−···−': '=',
-    '·−·−·': '+', '−····−': '-', '··−−·−': '_',
-    '·−··−·': '"', '···−··−': '$', '·−−·−·': '@'
+    '-.-.--': '!',  # Corrected Morse code for "!"
+    '-..-.': '/', '-.--.': '(', '-.--.-': ')', '.-...': '&',
+    '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
+    '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$',
+    '.--.-.': '@', '/': ' '  # Added '/' for word separator
 }
 
 def allowed_file(filename):
@@ -246,18 +246,12 @@ def upload_file():
 
     tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp_audio.name)
-    print(request.form)
 
     if request.form.get('type') == 'morse':
         tone_map, segments, morse, decoded_text, duration_ms = decode_morse(tmp_audio.name)
         
         # Use the existing functions to generate timestamps
         timestamps = generate_morse_timestamps(segments, morse)
-        
-        print("Segments:", segments)
-        print("Morse Code:", morse)
-        print("Decoded Text:", decoded_text)
-        print("Final Timestamps:", timestamps)
 
         tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
         tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)

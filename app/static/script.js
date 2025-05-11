@@ -39,6 +39,11 @@ document.getElementById('startButton').addEventListener('click', async (event) =
     return;
   }
 
+  if (activeMode === 'dtmf') {
+    alert('DTMF mode is not yet implemented.');
+    return;
+  }
+
   else if (document.getElementById('soundUpload').files.length === 0) {
     alert('Please select a sound file to upload.');
     return;
