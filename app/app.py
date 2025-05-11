@@ -105,7 +105,94 @@ def decode_morse(filepath):
     segments = tone_map_to_segments(tone_map, step_ms)
     morse = segments_to_morse(segments)
     text = morse_to_text(morse)
-    return tone_map, text, duration_ms
+    return tone_map, segments, morse, text, duration_ms
+
+def generate_morse_timestamps(segments, morse):
+    """
+    Generate timestamps for each decoded morse character
+    
+    Args:
+        segments: List of (is_tone, duration) pairs
+        morse: Morse code string with spaces and slashes
+        
+    Returns:
+        List of [timestamp_ms, character] pairs
+    """
+    timestamps = []
+    current_time = 0
+    morse_parts = []
+    current_symbol = ""
+    
+    # Process morse code to separate symbols by spaces and words by slashes
+    for char in morse:
+        if char == " ":
+            if current_symbol:
+                morse_parts.append(current_symbol)
+                current_symbol = ""
+            else:
+                # Double space (word separator)
+                morse_parts.append("/")
+        else:
+            current_symbol += char
+    
+    # Add the last symbol if there is one
+    if current_symbol:
+        morse_parts.append(current_symbol)
+    
+    # Find the timestamp for each morse part
+    segment_index = 0
+    time_acc = 0
+    
+    for morse_part in morse_parts:
+        if morse_part == "/":
+            # Word separator
+            timestamps.append([time_acc, " "])
+            continue
+            
+        # Find when this symbol ends
+        symbol_duration = 0
+        symbol_segments = []
+        
+        # Calculate how many segments this symbol uses
+        for char in morse_part:
+            if char == ".":
+                symbol_segments.append(1)  # Dot
+            elif char == "-":
+                symbol_segments.append(2)  # Dash
+        
+        # Skip segments until we find the end of this symbol
+        while segment_index < len(segments) and len(symbol_segments) > 0:
+            is_tone, duration = segments[segment_index]
+            time_acc += duration
+            
+            if is_tone:
+                # Tone segment corresponds to a dot or dash
+                if symbol_segments[0] == 1 and duration < 150:  # Dot
+                    symbol_segments.pop(0)
+                elif symbol_segments[0] == 2 and duration >= 150:  # Dash
+                    symbol_segments.pop(0)
+            
+            segment_index += 1
+            
+            # Move past the silence between parts of the same character
+            if len(symbol_segments) > 0 and segment_index < len(segments):
+                is_next_tone, next_duration = segments[segment_index]
+                if not is_next_tone and next_duration < 150:
+                    time_acc += next_duration
+                    segment_index += 1
+        
+        # Add the character at the accumulated time
+        char = morse_to_text(morse_part)
+        timestamps.append([time_acc, char])
+        
+        # Skip the silence between characters
+        if segment_index < len(segments):
+            is_tone, duration = segments[segment_index]
+            if not is_tone and duration >= 150 and duration < 350:
+                time_acc += duration
+                segment_index += 1
+    
+    return timestamps
 
 def generate_bar_video(tone_map, window_ms, output_path, bar_width=512, height=96, fps=60):
     frames = []
@@ -157,25 +244,20 @@ def upload_file():
     if mime not in ALLOWED_MIME_TYPES:
         return redirect(url_for('index', err='Invalid file type'))
 
-
     tmp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".wav", dir=UPLOAD_DIR)
     file.save(tmp_audio.name)
     print(request.form)
 
     if request.form.get('type') == 'morse':
-        tone_map, decoded_text, duration_ms = decode_morse(tmp_audio.name)
-
-        # Generate timestamps for each decoded character
-        timestamps = []
-        current_time = 0
-        char_index = 0
-        for is_tone, duration in tone_map_to_segments(tone_map, 10):
-            current_time += duration
-            if is_tone and char_index < len(decoded_text):
-                timestamps.append([current_time, decoded_text[char_index]])  # Changed to list of lists
-                char_index += 1
-
-        print("Timestamps:", timestamps)
+        tone_map, segments, morse, decoded_text, duration_ms = decode_morse(tmp_audio.name)
+        
+        # Use the existing functions to generate timestamps
+        timestamps = generate_morse_timestamps(segments, morse)
+        
+        print("Segments:", segments)
+        print("Morse Code:", morse)
+        print("Decoded Text:", decoded_text)
+        print("Final Timestamps:", timestamps)
 
         tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
         tmp_bar = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=UPLOAD_DIR)
