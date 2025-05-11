@@ -16,8 +16,29 @@
     <h1>MORSE DECODER</h1>
   </div>
 
-  <video id="morseBarDisplay" loop oncanplaythrough="this.play(); document.getElementById('loadingDisplay').style.display='none';">
+  <video id="morseBarDisplay" loop
+  oncanplaythrough="document.getElementById('loadingDisplay').style.display='none';"
+  onplay="document.getElementById('ppButton').innerText = '⏸';"
+  onpause="document.getElementById('ppButton').innerText = '▶';"
+  >
+  
     <source src="{{ video_path }}" type="video/mp4">
   </video>
+
+  <div id="controlPanel">
+    <button id="ppButton" class="button stopped round" onclick="togglePlay()">▶</button>
+    <button id="stopButton" class="button round" onclick="stopVideo()">⏹</button>
+  </div>
+
+  <div id="morseOutDiv">
+    <h2 id="morseText">DECODED TEXT</h2>
+    <input type="text" id="morseOutput" placeholder="Decoded text will appear here">
+    <div id="morseOutButtons">
+      <button id="copyButton" class="button round" onclick="copyToClipboard()">⧉</button>
+      <button id="clearButton" class="button round" onclick="document.getElementById('morseOutput').value = '';">🗑</button>
+    </div>
+
+  </div>
+
 </body>
 </html>

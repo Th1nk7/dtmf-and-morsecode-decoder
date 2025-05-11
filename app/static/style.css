@@ -25,9 +25,8 @@
   position: absolute;
   display:grid;
   grid-template:
-    "title title title" 1fr
-    "uploadField uploadField uploadField" 1fr
-    "dtmfButton startButton morseButton" 1fr / 1fr 1fr 1fr;
+    "title title" 1fr
+    "morseVisual decodedMorse" 3fr;
 }
 
 #title {
@@ -35,9 +34,12 @@
   text-align: center;
   font-family: 'Press Start 2P', display;
   font-size: 30px;
-  line-height: 2.5em;
+  line-height: 5em;
   color: white;
   text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
+  cursor: default;
+  width: 100%;
+  height: 100%;
 }
 
 #uploadField {
@@ -114,4 +116,166 @@
   background-color: rgba(100, 100, 100, 0.5);
   place-items: center;
   justify-content: center;
+}
+
+.button.round {
+  display: block;
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  font-size:50px;
+  line-height: 1.5;
+}
+
+.button.round:hover {
+  border-color: #00f;
+}
+
+#clearButton {
+  text-indent: 2.5px;
+}
+
+#controlPanel {
+  grid-area: ctrlPanel;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 30px;
+}
+
+#morseOutDiv {
+  grid-area: decodedMorse;
+  display: grid;
+  grid-template-rows: 0.08fr 0.72fr 0.2fr;
+  padding: 50px;
+  padding-bottom: 0;
+  padding-top: 0;
+  row-gap: 10px;
+}
+
+#morseOutButtons {
+  display: flex;
+  place-content: left;
+  padding-left: 15px;
+  position: relative;
+  justify-content: space-between;
+  width: 165px;
+}
+
+#morseTitle {
+  text-align: left;
+  font-family: 'Press Start 2P', display;
+  font-size: 30px;
+  color: white;
+  text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
+  cursor: default;
+  position: relative;
+  margin-bottom: 0;
+  margin-top: 150px;
+}
+
+#morseVisual {
+  grid-area: morseVisual;
+  display: grid;
+  grid-template: 
+  "morseBar" 1fr
+  "ctrlPanel" 1fr;
+  place-items: center;
+  position: relative;
+  top: 4vh;
+}
+
+#controlPanel {
+  grid-area: ctrlPanel;
+  display: flex;
+  justify-content: space-evenly;
+  top:-8vh;
+  position: absolute;
+  width: 30%;
+}
+
+#morseBarDisplay {
+  grid-area: morseBar;
+  display: block;
+  width: 60%;
+  position: relative;
+  top:5vh;
+}
+
+#volumeControl {
+  position: relative;
+  display: inline-block;
+}
+
+#visualText {
+  font-family: 'Press Start 2P', display;
+  font-size: 30px;
+  color: white;
+  text-shadow: -1px -1px 0 #00f, 1px -1px 0 #00f, -1px 1px 0 #00f, 1px 1px 0 #00f;
+  position:fixed;
+  top: calc(50% - 95px);
+  left: 10.5vw;
+}
+
+#volumeButton {
+  position: relative;
+  z-index: 2;
+}
+
+#volumeSlider {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-90deg);
+  width: 150px;
+  height: 30px;
+  background: lightgray;
+  border: none;
+  border-radius: 15px;
+  outline: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+  transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
+}
+
+#volumeSlider::-webkit-slider-thumb {
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  background: blue;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#volumeSlider::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  background: blue;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#volumeControl:hover #volumeSlider {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+#volumeControl:not(:hover) #volumeSlider {
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 1s;
+}
+
+#morseOutput {
+  font-family: 'Press Start 2P', display;
+  font-size: 1em;
+  text-transform: uppercase;
+  overflow: hidden;
+  position: relative;
+  resize: none;
+  background-color: #555;
+  color: #fff;
+  border-radius: 10px;
+  border: 3px solid white;
 }
