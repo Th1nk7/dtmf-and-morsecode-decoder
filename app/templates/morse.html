@@ -6,6 +6,7 @@
   <title>MORSE DECODER</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <script>const timestamps = JSON.parse(`{{ timestamps | safe }}`);</script>
   <script src="{{ url_for('static', filename='morse.js') }}" defer></script>
 </head>
 <body id="morseBody">
@@ -22,7 +23,9 @@
     <video id="morseBarDisplay" loop
     oncanplaythrough="document.getElementById('loadingDisplay').style.display='none';"
     onplay="document.getElementById('ppButton').innerText = '⏸';"
-    onpause="document.getElementById('ppButton').innerText = '▶';">
+    onpause="document.getElementById('ppButton').innerText = '▶';"
+    onended="triggeredIndexes.clear();lastTime = 0;"
+    onseeked="lastTime = vid.currentTime; triggeredIndexes.clear();">
       <source src="{{ video_path }}" type="video/mp4">
     </video>
 

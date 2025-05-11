@@ -10,6 +10,8 @@ import imageio
 import subprocess
 import uuid
 import shutil
+from mutagen.mp4 import MP4
+import json
 
 app = Flask(__name__)
 app.secret_key = str(uuid.uuid4())  # Replace with a strong, unique key
@@ -170,7 +172,7 @@ def upload_file():
         for is_tone, duration in tone_map_to_segments(tone_map, 10):
             current_time += duration
             if is_tone and char_index < len(decoded_text):
-                timestamps.append((current_time, decoded_text[char_index]))
+                timestamps.append([current_time, decoded_text[char_index]])  # Changed to list of lists
                 char_index += 1
 
         print("Timestamps:", timestamps)
@@ -185,6 +187,10 @@ def upload_file():
             "-c:v", "libx264", "-c:a", "aac", "-strict", "experimental",
             "-shortest", tmp_video.name
         ])
+
+        video = MP4(tmp_video.name)
+        video["----:com.apple.iTunes:timestampArray"] = [json.dumps(timestamps).encode("utf-8")]
+        video.save()
 
     os.remove(tmp_audio.name)
     os.remove(tmp_bar.name)
@@ -202,7 +208,7 @@ def morse():
     if not os.path.exists(video_path):
         return redirect(url_for('index', err='Video not found'))
 
-    return render_template('morse.html', video_path=f"uploads/{video_id}.mp4")
+    return render_template('morse.html', video_path=f"uploads/{video_id}.mp4", timestamps=MP4(video_path).tags.get('----:com.apple.iTunes:timestampArray')[0].decode("utf-8"))
 
 @app.route('/uploads/<path:filename>', methods=['GET'])
 def send_video(filename):

@@ -1,4 +1,25 @@
 const vid = document.getElementById('morseBarDisplay');
+let triggeredIndexes = new Set();
+let lastTime = 0;
+const secondTimestamps = timestamps.map(([ms, char]) => [ms / 1000, char]);
+
+function checkTimestamps() {
+  if (vid.paused || vid.ended) {
+    return;
+  }
+
+  const currentTime = vid.currentTime;
+
+  for (let i = 0; i < secondTimestamps.length; i++) {
+    const [ts, char] = secondTimestamps[i];
+    if (!triggeredIndexes.has(i) && lastTime < ts && currentTime >= ts) {
+      triggeredIndexes.add(i);
+      document.getElementById('morseOutput').value += char;
+    }
+  }
+
+  lastTime = currentTime;
+}
 
 function copyToClipboard() {
   navigator.clipboard.writeText(document.getElementById('morseOutput').value ).then(function() {
@@ -35,3 +56,5 @@ function stopVideo() {
   vid.currentTime = 0;
   vid.pause()
 }
+
+setInterval(checkTimestamps, 50);
