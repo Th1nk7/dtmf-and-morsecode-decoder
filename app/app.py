@@ -32,11 +32,11 @@ MORSE_TO_CHARS_MAPPING = {
     '-.--': 'Y', '--..': 'Z', '.----': '1', '..---': '2', '...--': '3',
     '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8',
     '----.': '9', '-----': '0', '.-.-.-': '.', '--..--': ',', '..--..': '?',
-    '-.-.--': '!',  # Corrected Morse code for "!"
+    '-.-.--': '!',
     '-..-.': '/', '-.--.': '(', '-.--.-': ')', '.-...': '&',
     '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+',
     '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$',
-    '.--.-.': '@', '/': ' '  # Added '/' for word separator
+    '.--.-.': '@', '/': ' '
 }
 
 def allowed_file(filename):
@@ -119,7 +119,6 @@ def generate_morse_timestamps(segments, morse):
         List of [timestamp_ms, character] pairs
     """
     timestamps = []
-    current_time = 0
     morse_parts = []
     current_symbol = ""
     
@@ -149,8 +148,6 @@ def generate_morse_timestamps(segments, morse):
             timestamps.append([time_acc, " "])
             continue
             
-        # Find when this symbol ends
-        symbol_duration = 0
         symbol_segments = []
         
         # Calculate how many segments this symbol uses

@@ -1,7 +1,7 @@
 const vid = document.getElementById('morseBarDisplay');
 let triggeredIndexes = new Set();
 let lastTime = 0;
-const secondTimestamps = timestamps.map(([ms, char]) => [ms / 1000, char]);
+const secondTimestamps = timestamps.map(([ms, char]) => [(ms-55) / 1000, char]);
 
 function checkTimestamps() {
   if (vid.paused || vid.ended) {

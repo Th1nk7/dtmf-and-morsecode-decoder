@@ -24,7 +24,7 @@
     oncanplaythrough="document.getElementById('loadingDisplay').style.display='none';"
     onplay="document.getElementById('ppButton').innerText = '⏸';"
     onpause="document.getElementById('ppButton').innerText = '▶';"
-    onended="triggeredIndexes.clear();lastTime = 0;"
+    onended="triggeredIndexes.clear(); lastTime = 0;"
     onseeked="lastTime = vid.currentTime; triggeredIndexes.clear();">
       <source src="{{ video_path }}" type="video/mp4">
     </video>
