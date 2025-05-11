@@ -4,22 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MORSE DECODER</title>
+
+  <!-- Load CSS from style.css using jinja2 templating -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Load Google Material Symbols fonten -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <!-- Modtag timestamps fra flask serveren og parse strengen til et JSON objekt -->
   <script>const timestamps = JSON.parse(`{{ timestamps | safe }}`);</script>
+
+  <!-- Kør script fra morse.js ved hjælp af jinja2 templating -->
   <script src="{{ url_for('static', filename='morse.js') }}" defer></script>
 </head>
 <body id="morseBody">
+
+  <!-- Loading div -->
   <div id="loadingDisplay">
+
+    <!-- Animeret loading icon -->
     <img src="{{ url_for('static', filename='loadingIcon.svg') }}" display="flex">
   </div>
 
+  <!-- Title div -->
   <div id="title">
     <h1>MORSE DECODER</h1>
   </div>
 
+  <!-- Div som indeholder alt det der har med visualisering at gøre -->
   <div id="morseVisual">
+
+    <!-- Overskrift til visualisering -->
     <h1 id="visualText">VISUALIZED</h1>
+
+    <!-- Video element, som looper, og lytter til om videoen trigger et af følgende events:
+    oncanplaythrough, onplay, onpause, onended, onseeked og kører tilsvarende JS -->
+    <!-- Videoen fjerner loading div'en når den kan spille helt igennem uden at pause -->
+    <!-- Videoen ændrer knappen til pause når videoen spiller -->
+    <!-- Videoen ændrer knappen til play når videoen er paused -->
+    <!-- Videoen sætter triggeredIndexes til tom når videoen er færdig -->
+    <!-- Videoen sætter lastTime til 0 når videoen er færdig -->
+    <!-- Videoen sætter triggeredIndexes til tom når videoen er seeked -->
+    <!-- Videoen sætter lastTime til videoens nuværende tid når videoen er seeked -->
+    <!-- Navn på videoen er hentet med jinja2 templating fra flask serveren -->
     <video id="morseBarDisplay" loop
     oncanplaythrough="document.getElementById('loadingDisplay').style.display='none';"
     onplay="document.getElementById('ppButton').innerText = '⏸';"
@@ -29,21 +56,43 @@
       <source src="{{ video_path }}" type="video/mp4">
     </video>
 
+    <!-- Div som indeholder knapperne til at styre videoen -->
+    <!-- Derudover også volume slideren -->
     <div id="controlPanel">
-      <button id="ppButton" class="button stopped round" onclick="togglePlay()">▶</button>
+
+      <!-- Knap der starter og pauser videoen -->
+      <button id="ppButton" class="button stopped round" onclick="vid.paused ? vid.play() : vid.pause();">▶</button>
+
+      <!-- Knap der stopper videoen og sætter den tilbage til start ved brug af JS funktion -->
       <button id="stopButton" class="button round" onclick="stopVideo()">⏹</button>
+
+      <!-- Div med volume slider og mute knap -->
+      <!-- Gør brug af ikoner fra Google Material Symbols -->
+      <!-- Volume slideren ændrer lydstyrken på videoen -->
+      <!-- Mute knappen ændrer ikonet til volume_up eller volume_off alt efter om videoen er muted -->
       <div id="volumeControl">
         <button id="volumeButton" class="button round material-symbols-outlined" style="font-family: 'Material Symbols Outlined';" onclick="toggleMute()">volume_up</button>
-        <input id="volumeSlider" type="range" min="0" max="1" step="0.1" value="1" oninput="setVolume(this.value)">
+        <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.5" oninput="setVolume(this.value)">
       </div>
     </div>
   </div>
 
+  <!-- Div som indeholder output og knapper til at kopiere og slette -->
   <div id="morseOutDiv">
+
+    <!-- Overskrift til output -->
     <h1 id="morseTitle">DECODED TEXT</h1>
+
+    <!-- Tekstfelt til output -->
     <textarea name="text" id="morseOutput" placeholder="Decoded text will appear here" rows="14" cols="10" wrap="soft" maxlength="825"></textarea>
+
+    <!-- Knapper til at kopiere og slette teksten i tekstfeltet -->
     <div id="morseOutButtons">
-      <button id="copyButton" class="button round" onclick="copyToClipboard()">⧉</button>
+
+      <!-- Knap der kopierer teksten i tekstfeltet til clipboard -->
+      <button id="copyButton" class="button round" onclick="navigator.clipboard.writeText(document.getElementById('morseOutput').value)">⧉</button>
+
+      <!-- Knap der sletter teksten i tekstfeltet -->
       <button id="clearButton" class="button round" onclick="document.getElementById('morseOutput').value = ''">🗑</button>
     </div>
   </div>

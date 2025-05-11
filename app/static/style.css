@@ -1,5 +1,7 @@
+/* Google Font importeres */
 @import url('https://fonts.googleapis.com/css2?family=Jersey+15&family=Press+Start+2P&display=swap');
 
+/* CSS for basen af index siden */
 #indexHTML, #indexBody {
   margin: 0;
   padding: 0;
@@ -15,6 +17,7 @@
     "dtmfButton startButton morseButton" 1fr / 1fr 1fr 1fr;
 }
 
+/* CSS for basen af morse siden */
 #morseHTML, #morseBody {
   margin: 0;
   padding: 0;
@@ -29,6 +32,7 @@
     "morseVisual decodedMorse" 3fr;
 }
 
+/* Styling af overskrifter */
 #title {
   grid-area:title;
   text-align: center;
@@ -42,6 +46,7 @@
   height: 100%;
 }
 
+/* Styling af upload feltet */
 #uploadField {
   grid-area: uploadField;
   display: grid;
@@ -51,6 +56,7 @@
   color: white;
 }
 
+/* Styling af upload feltet */
 #fileNameField {
   font-family: "Jersey 15", sans-serif;
   font-weight: 400;
@@ -59,6 +65,7 @@
   margin: 0;
 }
 
+/* Styling af alle knappen */
 .button {
   font-family: "Jersey 15", sans-serif;
   font-weight: 400;
@@ -74,41 +81,49 @@
   
 }
 
+/* Styling af aktive knapper */
 .button.active {
   background-color: #00f;
 }
 
+/* Styling af knapperne når de ikke er aktive */
 .button:not(.active) {
   background-color: #555;
 }
 
+/* Styling af knapperne når de ikke er aktive og musen er over dem */
 .button.button:not(.active):hover {
   background-color: #666;
   text-shadow: -2px -2px 0 #00f, 2px -2px 0 #00f, -2px 2px 0 #00f, 2px 2px 0 #00f;
 }
 
+/* Styling til DTMF mode knappen */
 #dtmfButton {
   grid-area: dtmfButton;
   margin: 30px;
   margin-top: 0;
 }
 
+/* Styling til morse mode knappen */
 #morseButton {
   grid-area: morseButton;
   margin: 30px;
   margin-top: 0;
 }
 
+/* Styling til start upload (til server) knappen */
 #startButton {
   grid-area: startButton;
   margin-bottom: 30px;
 }
 
+/* Styling til upload (af fil til lokal storage) knappen */
 #uploadButton:hover {
   background-color: #666;
   text-shadow: -2px -2px 0 #00f, 2px -2px 0 #00f, -2px 2px 0 #00f, 2px 2px 0 #00f;
 }
 
+/* Styling til loading display */
 #loadingDisplay {
   position: absolute;
   width: 100vw;
@@ -116,8 +131,10 @@
   background-color: rgba(100, 100, 100, 0.5);
   place-items: center;
   justify-content: center;
+  z-index: 5;
 }
 
+/* Styling til de runde knapper på morse siden */
 .round {
   display: block;
   width: 75px;
@@ -127,21 +144,17 @@
   line-height: 1.5;
 }
 
+/* Styling til de runde knapper på morse siden når de bliver hoveret */
 .round:hover {
   border-color: #00f;
 }
 
+/* Styling til den runde clear knap til output feltet */
 #clearButton {
   text-indent: 2.5px;
 }
 
-#controlPanel {
-  grid-area: ctrlPanel;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin: 30px;
-}
-
+/* Styling til output div'en, som indeholder morse output og knapper der tilhører */
 #morseOutDiv {
   grid-area: decodedMorse;
   display: grid;
@@ -152,6 +165,7 @@
   row-gap: 10px;
 }
 
+/* Styling til output feltets knapper */
 #morseOutButtons {
   display: flex;
   place-content: left;
@@ -161,6 +175,7 @@
   width: 165px;
 }
 
+/* Styling til morse sidens overskrift */
 #morseTitle {
   text-align: left;
   font-family: 'Press Start 2P', display;
@@ -173,6 +188,7 @@
   margin-top: 150px;
 }
 
+/* Styling til visueliseringen af morse (Dette er div'en) */
 #morseVisual {
   grid-area: morseVisual;
   display: grid;
@@ -184,6 +200,7 @@
   top: 4vh;
 }
 
+/* Styling til styring af morse videoen */
 #controlPanel {
   grid-area: ctrlPanel;
   display: flex;
@@ -191,8 +208,10 @@
   top:-8vh;
   position: absolute;
   width: 30%;
+  margin: 30px;
 }
 
+/* Styling af morse videoen */
 #morseBarDisplay {
   grid-area: morseBar;
   display: block;
@@ -201,11 +220,13 @@
   top:5vh;
 }
 
+/* Styling til styring af morse videoens lydstyrke */
 #volumeControl {
   position: relative;
   display: inline-block;
 }
 
+/* Styling til output feltets overskrift */
 #visualText {
   font-family: 'Press Start 2P', display;
   font-size: 30px;
@@ -216,11 +237,13 @@
   left: 10.5vw;
 }
 
+/* Styling til morse videoens lydstyrke knap */
 #volumeButton {
   position: relative;
   z-index: 2;
 }
 
+/* Styling til lydstyrke slideren */
 #volumeSlider {
   position: absolute;
   bottom: -80px;
@@ -238,6 +261,7 @@
   transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
 }
 
+/* Styling til lydstyrke sliderens knap (som flyttes) i Chrome */
 #volumeSlider::-webkit-slider-thumb {
   appearance: none;
   width: 40px;
@@ -247,6 +271,7 @@
   cursor: pointer;
 }
 
+/* Styling til lydstyrke sliderens knap (som flyttes) i Firefox */
 #volumeSlider::-moz-range-thumb {
   width: 40px;
   height: 40px;
@@ -255,18 +280,21 @@
   cursor: pointer;
 }
 
+/* Styling til lydstyrke slideren når lydstyrkeknappen er hoveret */
 #volumeControl:hover #volumeSlider {
   opacity: 1;
   visibility: visible;
   transition-delay: 0s;
 }
 
+/* Styling til lydstyrke slideren når lydstyrkeknappen ikke er hoveret */
 #volumeControl:not(:hover) #volumeSlider {
   opacity: 0;
   visibility: hidden;
   transition-delay: 1s;
 }
 
+/* Styling til morse output feltet */
 #morseOutput {
   font-family: 'Press Start 2P', display;
   font-size: 1em;

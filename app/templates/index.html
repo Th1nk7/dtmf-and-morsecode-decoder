@@ -4,25 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DTMF & MORSE DECODER</title>
+
+  <!-- Load CSS fra style.css ved brug af jinja2 templating -->
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Load script fra script.js ved brug af jinja2 templating -->
   <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 </head>
 <body id="indexBody">
+
+  <!-- Loading div -->
   <div id="loadingDisplay" hidden>
+    <!-- Animeret loading icon -->
     <img src="{{ url_for('static', filename='loadingIcon.svg') }}" alt="Loading..." >
   </div>
+
+  <!-- Title div -->
   <div id="title">
     <h1>DTMF & MORSE<br>DECODER</h1>
   </div>
 
+  <!-- Div til uploading af lydfil -->
   <div id="uploadField">
+
+    <!-- Fil upload status text (ændres når fil er uploadet) -->
     <h2 id="fileNameField">No file uploaded yet</h2>
+
+    <!-- Fil upload knap, som kører JavaScript funktionen updateFileName() når filen er uploadet -->
     <input type="file" id="soundUpload" onchange="updateFileName()" hidden>
+
+    <!-- Label til fil upload knappen -->
     <label for="soundUpload" class="button" id="uploadButton">Click here to upload sound</label>
   </div>
 
+  <!-- Knap der gør DTMF til den aktive mode -->
   <button id="dtmfButton" class="button" onclick="toggleButton('dtmf')">Click here to select DTMF</button>
+
+  <!-- Knap som starter decoder ved at upload filen -->
   <button class="button" id="startButton">Start decoder!</button>
+
+  <!-- Knap der gør morse til den aktive mode -->
   <button id="morseButton" class="button" onclick="toggleButton('morse')">Click here to select morsecode</button>
 
 </body>

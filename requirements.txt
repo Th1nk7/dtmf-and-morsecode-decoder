@@ -1,0 +1,8 @@
+flask
+numpy
+pydub
+mutagen
+pillow
+imageio
+imageio-ffmpeg
+python-magic
